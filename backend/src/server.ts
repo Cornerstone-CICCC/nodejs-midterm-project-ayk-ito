@@ -3,6 +3,7 @@ import express, { Request, Response } from "express";
 import path from "path";
 import cookieSession from "cookie-session";
 import userRouter from "./routes/user.routes";
+import articleRouter from "./routes/article.routes";
 import cors from "cors";
 import dotenv from "dotenv";
 dotenv.config();
@@ -38,6 +39,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use("/users", userRouter);
+app.use("/articles", articleRouter);
 
 // 404 Fallback
 app.use((req: Request, res: Response) => {

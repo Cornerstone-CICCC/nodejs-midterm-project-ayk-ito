@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import userModel from "../models/user.model";
 import { User } from "../types/user";
+import articleModel from "../models/article.model";
 
 /**
  * Get all users
@@ -49,6 +50,8 @@ const addUser = async (req: Request<{}, {}, Omit<User, "id">>, res: Response) =>
     res.status(409).json({ error: "Username is taken!" });
     return;
   }
+  articleModel.createUserArticles(user.id);
+
   res.status(201).json(user);
 };
 
