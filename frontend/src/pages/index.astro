@@ -1,0 +1,54 @@
+---
+import Home from "../components/Home.astro";
+import Layout from "../layouts/Layout.astro";
+
+// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
+// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+---
+
+<Layout>
+  <Home />
+</Layout>
+
+<script>
+  async function checkAuth() {
+    try {
+      const res = await fetch("http://localhost:3000/users/profile", {
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        window.location.href = "/login";
+        return;
+      }
+
+      const data = await res.json();
+      const profileInfo = document.getElementById("profileInfo");
+      if (profileInfo) {
+        profileInfo.innerHTML = `
+			<p><strong>Username:</strong> ${data.username}</p>
+			<p><strong>First Name:</strong> ${data.firstname}</p>
+			<p><strong>Last Name:</strong> ${data.lastname}</p>
+		  `;
+      }
+    } catch (err) {
+      console.error(err);
+      window.location.href = "/login";
+    }
+  }
+
+  document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+    try {
+      await fetch("http://localhost:3000/users/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      window.location.href = "/login";
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+  // Check authentication when page loads
+  checkAuth();
+</script>
