@@ -11,6 +11,17 @@ import Layout from "../layouts/Layout.astro";
 </Layout>
 
 <script>
+  // Define the Article interface to match API response
+  interface Article {
+    id: number;
+    title: string;
+    date: string;
+    description: string;
+    imageUrl: string;
+  }
+
+  let userId: number | null = null;
+
   async function checkAuth() {
     try {
       const res = await fetch("http://localhost:3000/users/profile", {
@@ -23,6 +34,8 @@ import Layout from "../layouts/Layout.astro";
       }
 
       const data = await res.json();
+      userId = data.id; // Store user ID for article fetching
+
       const profileInfo = document.getElementById("profileInfo");
       if (profileInfo) {
         profileInfo.innerHTML = `
@@ -31,11 +44,130 @@ import Layout from "../layouts/Layout.astro";
 			<p><strong>Last Name:</strong> ${data.lastname}</p>
 		  `;
       }
+
+      // After getting user profile, fetch their articles
+      await fetchArticles(userId);
     } catch (err) {
       console.error(err);
       window.location.href = "/login";
     }
   }
+
+  async function fetchArticles(userId: number) {
+    try {
+      const res = await fetch(`http://localhost:3000/articles/${userId}`, {
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        console.error("Failed to fetch articles");
+        return;
+      }
+
+      const articles: Article[] = await res.json();
+
+      // Update the DOM with the fetched articles
+      displayArticles(articles);
+    } catch (err) {
+      console.error("Error fetching articles:", err);
+    }
+  }
+
+  function displayArticles(articles: Article[]) {
+    const postsContainer = document.getElementById("postsContainer");
+    if (!postsContainer) return;
+
+    // Clear existing content
+    postsContainer.innerHTML = "";
+
+    if (articles.length === 0) {
+      postsContainer.innerHTML =
+        "<p class='no-posts'>No food posts yet. Share your first delicious moment!</p>";
+      return;
+    }
+
+    // Add each article to the container
+    articles.forEach((article) => {
+      const formattedDate = new Date(article.date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      const postHtml = `
+        <div class="post-card">
+          <img src="${article.imageUrl}" alt="${article.title}" class="food-image">
+          <div class="post-content">
+            <h3>${article.title}</h3>
+            <p class="post-date">${formattedDate}</p>
+            <p>${article.description}</p>
+          </div>
+        </div>
+      `;
+
+      postsContainer.innerHTML += postHtml;
+    });
+  }
+
+  // Handle form submission
+  document.getElementById("foodPostForm")?.addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    if (!userId) {
+      alert("Please log in to share your food");
+      return;
+    }
+
+    const titleInput = document.getElementById("foodTitle") as HTMLInputElement;
+    const descriptionInput = document.getElementById("foodDescription") as HTMLTextAreaElement;
+    const imageInput = document.getElementById("foodImage") as HTMLInputElement;
+
+    if (
+      !titleInput.value ||
+      !descriptionInput.value ||
+      !imageInput.files ||
+      imageInput.files.length === 0
+    ) {
+      alert("Please fill all fields and select an image");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("title", titleInput.value);
+    formData.append("description", descriptionInput.value);
+    formData.append("image", imageInput.files[0]);
+    formData.append("userId", userId.toString());
+
+    try {
+      // This is a placeholder for your API endpoint to create a new article
+      const response = await fetch("http://localhost:3000/articles", {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create post");
+      }
+
+      alert("Your delicious moment has been shared!");
+
+      // Reset form
+      titleInput.value = "";
+      descriptionInput.value = "";
+      imageInput.value = "";
+
+      // Hide preview
+      const preview = document.getElementById("imagePreview") as HTMLImageElement;
+      preview.classList.add("hidden");
+
+      // Refresh articles
+      await fetchArticles(userId);
+    } catch (error) {
+      console.error("Error creating post:", error);
+      alert("Failed to share your post. Please try again.");
+    }
+  });
 
   document.getElementById("logoutBtn")?.addEventListener("click", async () => {
     try {

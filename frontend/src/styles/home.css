@@ -177,3 +177,58 @@ textarea {
     grid-template-columns: 1fr;
   }
 }
+
+/* Loading state and empty state styles */
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: var(--secondary-color);
+  font-style: italic;
+}
+
+.no-posts {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-color);
+  font-style: italic;
+  background-color: var(--card-color);
+  border-radius: 10px;
+  border: 1px dashed var(--border-color);
+}
+
+/* Animation for image loading */
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.food-image.loading {
+  animation: pulse 1.5s infinite;
+  background-color: var(--border-color);
+}
+
+/* Form feedback */
+.form-feedback {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border-radius: 5px;
+}
+
+.form-feedback.success {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #2e7d32;
+  border: 1px solid #2e7d32;
+}
+
+.form-feedback.error {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #d32f2f;
+  border: 1px solid #d32f2f;
+}

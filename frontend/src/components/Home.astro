@@ -47,64 +47,8 @@ import "../styles/home.css";
   <section class="food-posts">
     <h2>Recent Delicious Moments</h2>
     <div class="posts-container" id="postsContainer">
-      <!-- Posts will be populated here -->
-      <div class="post-card">
-        <img
-          src="https://source.unsplash.com/random/300x200/?food"
-          alt="Example food"
-          class="food-image"
-        />
-        <div class="post-content">
-          <h3>Spring Salad</h3>
-          <p class="post-date">May 1, 2023</p>
-          <p>
-            A fresh and colorful salad with seasonal vegetables and a light citrus dressing. Perfect
-            for a sunny day!
-          </p>
-        </div>
-      </div>
-      <div class="post-card">
-        <img
-          src="https://source.unsplash.com/random/300x200/?dessert"
-          alt="Example dessert"
-          class="food-image"
-        />
-        <div class="post-content">
-          <h3>Strawberry Parfait</h3>
-          <p class="post-date">May 2, 2023</p>
-          <p>
-            Delightful layers of fresh strawberries, cream, and granola. A perfect spring treat!
-          </p>
-        </div>
-      </div>
+      <!-- Posts will be dynamically populated from the API -->
+      <div class="loading">Loading your delicious moments...</div>
     </div>
   </section>
 </div>
-
-<script>
-  // Image preview functionality
-  document.getElementById("foodImage")?.addEventListener("change", function (event) {
-    const fileInput = event.target as HTMLInputElement;
-    const preview = document.getElementById("imagePreview") as HTMLImageElement;
-
-    if (fileInput.files && fileInput.files[0]) {
-      const reader = new FileReader();
-
-      reader.onload = function (e) {
-        if (e.target && e.target.result) {
-          preview.src = e.target.result as string;
-          preview.classList.remove("hidden");
-        }
-      };
-
-      reader.readAsDataURL(fileInput.files[0]);
-    }
-  });
-
-  // Form submission
-  document.getElementById("foodPostForm")?.addEventListener("submit", async function (event) {
-    event.preventDefault();
-    // Here you would implement the logic to send the form data to your backend
-    alert("Your delicious moment has been shared!");
-  });
-</script>
