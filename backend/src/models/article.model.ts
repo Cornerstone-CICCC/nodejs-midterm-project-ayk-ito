@@ -42,9 +42,35 @@ class ArticleModel {
 
     return this.articles[userId] || [];
   }
+
   createUserArticles(userId: string) {
     // this.articles[userId] = [];
     this.articles[userId] = foodPosts;
+  }
+
+  addArticle(userId: string, articleData: Omit<Article, "id">): Article {
+    // Initialize the user's article array if it doesn't exist
+    if (!this.articles[userId]) {
+      this.articles[userId] = [];
+    }
+
+    // Generate a new ID for the article (using the highest existing ID + 1)
+    const existingArticles = this.articles[userId];
+    const newId =
+      existingArticles.length > 0
+        ? Math.max(...existingArticles.map((article) => article.id)) + 1
+        : 1;
+
+    // Create the new article with an ID
+    const newArticle: Article = {
+      id: newId,
+      ...articleData,
+    };
+
+    // Add the article to the user's collection
+    this.articles[userId].push(newArticle);
+
+    return newArticle;
   }
 }
 

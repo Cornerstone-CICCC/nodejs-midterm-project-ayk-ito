@@ -20,7 +20,7 @@ import Layout from "../layouts/Layout.astro";
     imageUrl: string;
   }
 
-  let userId: number | null = null;
+  let userId: string | null = null;
 
   async function checkAuth() {
     try {
@@ -46,14 +46,14 @@ import Layout from "../layouts/Layout.astro";
       }
 
       // After getting user profile, fetch their articles
-      await fetchArticles(userId);
+      await fetchArticles(userId || "");
     } catch (err) {
       console.error(err);
       window.location.href = "/login";
     }
   }
 
-  async function fetchArticles(userId: number) {
+  async function fetchArticles(userId: string) {
     try {
       const res = await fetch(`http://localhost:3000/articles/${userId}`, {
         credentials: "include",
@@ -132,41 +132,54 @@ import Layout from "../layouts/Layout.astro";
       return;
     }
 
-    const formData = new FormData();
-    formData.append("title", titleInput.value);
-    formData.append("description", descriptionInput.value);
-    formData.append("image", imageInput.files[0]);
-    formData.append("userId", userId.toString());
+    // Use FileReader to convert image to data URL
+    const reader = new FileReader();
+    reader.readAsDataURL(imageInput.files[0]);
 
-    try {
-      // This is a placeholder for your API endpoint to create a new article
-      const response = await fetch("http://localhost:3000/articles", {
-        method: "POST",
-        credentials: "include",
-        body: formData,
-      });
+    reader.onload = async () => {
+      // Create article data
+      const newArticle = {
+        title: titleInput.value,
+        description: descriptionInput.value,
+        date: new Date().toISOString().split("T")[0], // Current date in YYYY-MM-DD format
+        imageUrl: reader.result,
+      };
 
-      if (!response.ok) {
-        throw new Error("Failed to create post");
+      try {
+        // Call the API endpoint to create a new article
+        console.log(userId);
+
+        const response = await fetch(`http://localhost:3000/articles/${userId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(newArticle),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to create post");
+        }
+
+        alert("Your delicious moment has been shared!");
+
+        // Reset form
+        titleInput.value = "";
+        descriptionInput.value = "";
+        imageInput.value = "";
+
+        // Hide preview
+        const preview = document.getElementById("imagePreview") as HTMLImageElement;
+        preview.classList.add("hidden");
+
+        // Refresh articles
+        await fetchArticles(userId || "");
+      } catch (error) {
+        console.error("Error creating post:", error);
+        alert("Failed to share your post. Please try again.");
       }
-
-      alert("Your delicious moment has been shared!");
-
-      // Reset form
-      titleInput.value = "";
-      descriptionInput.value = "";
-      imageInput.value = "";
-
-      // Hide preview
-      const preview = document.getElementById("imagePreview") as HTMLImageElement;
-      preview.classList.add("hidden");
-
-      // Refresh articles
-      await fetchArticles(userId);
-    } catch (error) {
-      console.error("Error creating post:", error);
-      alert("Failed to share your post. Please try again.");
-    }
+    };
   });
 
   document.getElementById("logoutBtn")?.addEventListener("click", async () => {
