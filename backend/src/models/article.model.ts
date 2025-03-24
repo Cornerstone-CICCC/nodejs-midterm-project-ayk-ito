@@ -2,6 +2,17 @@ import { v4 as uuidv4 } from "uuid";
 import { User } from "../types/user";
 import bcrypt from "bcrypt";
 import { Article } from "../types/article";
+import fs from "fs";
+import path from "path";
+
+// データ保存用ファイルパスの設定
+const DATA_DIR = path.join(__dirname, "../../../data");
+const ARTICLES_FILE = path.join(DATA_DIR, "articles.json");
+
+// ディレクトリが存在しない場合は作成
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
 
 const foodPosts = [
   {
@@ -19,13 +30,44 @@ class ArticleModel {
     [userId: string]: Article[];
   } = {};
 
+  constructor() {
+    this.loadArticles();
+  }
+
+  // 記事データをファイルから読み込む
+  private loadArticles(): void {
+    try {
+      if (fs.existsSync(ARTICLES_FILE)) {
+        const data = fs.readFileSync(ARTICLES_FILE, "utf8");
+        this.articles = JSON.parse(data);
+        console.log("Articles loaded from storage");
+      }
+    } catch (error) {
+      console.error("Error loading articles from file:", error);
+      this.articles = {};
+    }
+  }
+
+  // 記事データをファイルに保存
+  private saveArticles(): void {
+    try {
+      const data = JSON.stringify(this.articles, null, 2);
+      fs.writeFileSync(ARTICLES_FILE, data);
+      console.log("Articles saved to storage");
+    } catch (error) {
+      console.error("Error saving articles to file:", error);
+    }
+  }
+
   findAll(userId: string) {
     return this.articles[userId] || [];
   }
 
   createUserArticles(userId: string) {
-    // this.articles[userId] = [];
-    this.articles[userId] = foodPosts;
+    if (!this.articles[userId]) {
+      this.articles[userId] = foodPosts;
+      this.saveArticles();
+    }
   }
 
   addArticle(userId: string, articleData: Omit<Article, "id">): Article {
@@ -49,6 +91,9 @@ class ArticleModel {
 
     // Add the article to the user's collection
     this.articles[userId].push(newArticle);
+
+    // 記事追加後にデータを保存
+    this.saveArticles();
 
     return newArticle;
   }
@@ -84,6 +129,9 @@ class ArticleModel {
     // 更新された記事で置き換え
     this.articles[userId][index] = updatedArticle;
 
+    // 記事更新後にデータを保存
+    this.saveArticles();
+
     return updatedArticle;
   }
 
@@ -103,6 +151,9 @@ class ArticleModel {
 
     // 記事を配列から削除
     this.articles[userId].splice(index, 1);
+
+    // 記事削除後にデータを保存
+    this.saveArticles();
 
     return true;
   }
