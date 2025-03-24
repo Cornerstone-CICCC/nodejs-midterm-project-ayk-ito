@@ -251,15 +251,12 @@ import Layout from "../layouts/Layout.astro";
 
     // 更新する内容
     const updatedArticle = {
-      ...article,
       title: titleInput.value,
       description: descriptionInput.value,
     };
 
     try {
-      // ここでは更新APIがないためフロントエンドだけで更新
-      // 実際のアプリでは以下のようなAPIコールが必要
-      /*
+      // バックエンドAPIを呼び出して記事を更新（URLを修正）
       const response = await fetch(`http://localhost:3000/articles/${userId}/${articleId}`, {
         method: "PUT",
         headers: {
@@ -270,19 +267,23 @@ import Layout from "../layouts/Layout.astro";
       });
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Server response:", response.status, errorData);
         throw new Error(`Failed to update post: ${response.status}`);
       }
-      */
+
+      // 更新された記事データを取得
+      const updatedArticleData = await response.json();
 
       // フロントエンドのデータを更新
       const index = allArticles.findIndex((a) => a.id === articleId);
       if (index !== -1) {
-        allArticles[index] = updatedArticle;
+        allArticles[index] = updatedArticleData;
       }
 
       // モーダルの表示を更新
-      modalTitle.textContent = updatedArticle.title;
-      modalDescription.textContent = updatedArticle.description;
+      modalTitle.textContent = updatedArticleData.title;
+      modalDescription.textContent = updatedArticleData.description;
 
       // 画面の記事一覧も更新
       displayArticles(allArticles);
@@ -494,6 +495,11 @@ import Layout from "../layouts/Layout.astro";
     const editBtn = document.getElementById("editArticleBtn");
     const saveBtn = document.getElementById("saveArticleBtn");
     const cancelBtn = document.getElementById("cancelEditBtn");
+    const deleteBtn = document.getElementById("deleteArticleBtn");
+    const deleteConfirmModal = document.getElementById("deleteConfirmModal");
+    const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+    const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+    const deleteModalCloseBtn = document.querySelector("#deleteConfirmModal .close-modal");
 
     if (closeBtn && modal) {
       // Close when clicking the X
@@ -536,6 +542,50 @@ import Layout from "../layouts/Layout.astro";
       });
     }
 
+    // 削除ボタンのイベントリスナー
+    if (deleteBtn && deleteConfirmModal) {
+      deleteBtn.addEventListener("click", () => {
+        // メインモーダルを暗くする
+        modal?.classList.add("background-dim");
+
+        // 確認モーダルを表示
+        deleteConfirmModal.classList.add("show");
+      });
+    }
+
+    // 削除確認モーダルのイベントリスナー
+    if (confirmDeleteBtn) {
+      confirmDeleteBtn.addEventListener("click", () => {
+        handleArticleDelete();
+      });
+    }
+
+    // 削除キャンセルボタンのイベントリスナー
+    if (cancelDeleteBtn && deleteConfirmModal && modal) {
+      cancelDeleteBtn.addEventListener("click", () => {
+        deleteConfirmModal.classList.remove("show");
+        modal.classList.remove("background-dim");
+      });
+    }
+
+    // 削除モーダルの閉じるボタン
+    if (deleteModalCloseBtn && deleteConfirmModal && modal) {
+      deleteModalCloseBtn.addEventListener("click", () => {
+        deleteConfirmModal.classList.remove("show");
+        modal.classList.remove("background-dim");
+      });
+    }
+
+    // 削除確認モーダルの外側をクリックしたとき
+    if (deleteConfirmModal && modal) {
+      deleteConfirmModal.addEventListener("click", (e) => {
+        if (e.target === deleteConfirmModal) {
+          deleteConfirmModal.classList.remove("show");
+          modal.classList.remove("background-dim");
+        }
+      });
+    }
+
     // Close when pressing Escape key
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && modal && modal.classList.contains("show")) {
@@ -545,6 +595,57 @@ import Layout from "../layouts/Layout.astro";
         toggleEditMode(false);
       }
     });
+  }
+
+  // 記事削除の処理
+  async function handleArticleDelete() {
+    if (!userId) {
+      alert("Please log in to delete your food post");
+      return;
+    }
+
+    const modal = document.getElementById("articleModal");
+    const deleteConfirmModal = document.getElementById("deleteConfirmModal");
+
+    if (!modal || !deleteConfirmModal) {
+      console.error("Modal elements not found when deleting");
+      return;
+    }
+
+    const articleId = parseInt(modal.getAttribute("data-article-id") || "0");
+
+    try {
+      // バックエンドAPIを呼び出して記事を削除
+      const response = await fetch(`http://localhost:3000/articles/${userId}/${articleId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete post: ${response.status}`);
+      }
+
+      // フロントエンドのデータを更新
+      allArticles = allArticles.filter((article) => article.id !== articleId);
+
+      // 画面の記事一覧も更新
+      displayArticles(allArticles);
+
+      // モーダルを閉じる
+      deleteConfirmModal.classList.remove("show");
+      modal.classList.remove("show");
+      modal.classList.remove("background-dim");
+      document.body.style.overflow = "";
+
+      alert("Your food post has been deleted!");
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      alert("Failed to delete your post. Please try again.");
+
+      // エラー時も確認モーダルは閉じる
+      deleteConfirmModal.classList.remove("show");
+      modal.classList.remove("background-dim");
+    }
   }
 
   // Page initialization

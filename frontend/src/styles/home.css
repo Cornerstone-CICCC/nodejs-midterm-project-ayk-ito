@@ -482,3 +482,47 @@ textarea {
 .modal-text-content {
   margin-top: 15px;
 }
+
+/* Delete button styles */
+.delete-btn {
+  background-color: #f44336;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+.delete-btn:hover {
+  background-color: #d32f2f;
+}
+
+/* Delete confirmation modal styles */
+.delete-confirm-content {
+  max-width: 500px;
+}
+
+.delete-confirm-content h2 {
+  color: #d32f2f;
+  margin-bottom: 15px;
+}
+
+.delete-confirm-content p {
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* When a delete confirmation is shown, dim the background modal */
+.modal.background-dim {
+  opacity: 0.8;
+  pointer-events: none;
+}
