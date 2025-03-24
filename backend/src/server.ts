@@ -21,7 +21,7 @@ app.use(
   cookieSession({
     name: "session",
     keys: [SIGN_KEY, ENCRYPT_KEY],
-    maxAge: 24 * 60 * 60 * 1000, // 3分から24時間（1日）に変更
+    maxAge: 24 * 60 * 60 * 1000, // Changed from 3 minutes to 24 hours (1 day)
   })
 );
 app.set("view engine", "ejs");

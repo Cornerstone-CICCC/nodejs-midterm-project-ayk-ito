@@ -5,11 +5,11 @@ import articleModel from "./article.model";
 import fs from "fs";
 import path from "path";
 
-// データ保存用ファイルパスの設定
+// Data storage file paths
 const DATA_DIR = path.join(__dirname, "../../../data");
 const USERS_FILE = path.join(DATA_DIR, "users.json");
 
-// ディレクトリが存在しない場合は作成
+// Create directory if it doesn't exist
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
@@ -21,7 +21,7 @@ class UserModel {
     this.loadUsers();
   }
 
-  // ユーザーデータをファイルから読み込む
+  // Load user data from file
   private loadUsers(): void {
     try {
       if (fs.existsSync(USERS_FILE)) {
@@ -35,7 +35,7 @@ class UserModel {
     }
   }
 
-  // ユーザーデータをファイルに保存
+  // Save user data to file
   private saveUsers(): void {
     try {
       const data = JSON.stringify(this.users, null, 2);
@@ -74,7 +74,7 @@ class UserModel {
     };
     this.users.push(user);
 
-    // ユーザーデータを保存
+    // Save user data
     this.saveUsers();
 
     return user;

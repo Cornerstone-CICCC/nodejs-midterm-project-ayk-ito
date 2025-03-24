@@ -5,11 +5,11 @@ import { Article } from "../types/article";
 import fs from "fs";
 import path from "path";
 
-// データ保存用ファイルパスの設定
+// Data storage file paths
 const DATA_DIR = path.join(__dirname, "../../../data");
 const ARTICLES_FILE = path.join(DATA_DIR, "articles.json");
 
-// ディレクトリが存在しない場合は作成
+// Create directory if it doesn't exist
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
@@ -34,7 +34,7 @@ class ArticleModel {
     this.loadArticles();
   }
 
-  // 記事データをファイルから読み込む
+  // Load article data from file
   private loadArticles(): void {
     try {
       if (fs.existsSync(ARTICLES_FILE)) {
@@ -48,7 +48,7 @@ class ArticleModel {
     }
   }
 
-  // 記事データをファイルに保存
+  // Save article data to file
   private saveArticles(): void {
     try {
       const data = JSON.stringify(this.articles, null, 2);
@@ -92,7 +92,7 @@ class ArticleModel {
     // Add the article to the user's collection
     this.articles[userId].push(newArticle);
 
-    // 記事追加後にデータを保存
+    // Save articles after adding
     this.saveArticles();
 
     return newArticle;
@@ -103,56 +103,56 @@ class ArticleModel {
     articleId: number,
     articleData: Partial<Omit<Article, "id">>
   ): Article | null {
-    // ユーザーの記事配列が存在するか確認
+    // Check if user's article array exists
     if (!this.articles[userId]) {
       return null;
     }
 
-    // 更新対象の記事インデックスを検索
+    // Find the index of the article to update
     const index = this.articles[userId].findIndex((article) => article.id === articleId);
 
-    // 記事が見つからない場合はnullを返す
+    // Return null if article not found
     if (index === -1) {
       return null;
     }
 
-    // 既存の記事データを取得
+    // Get existing article data
     const existingArticle = this.articles[userId][index];
 
-    // 記事データを更新（IDは維持）
+    // Update article data (keep ID the same)
     const updatedArticle: Article = {
       ...existingArticle,
       ...articleData,
-      id: existingArticle.id, // IDは常に維持
+      id: existingArticle.id, // Always maintain the ID
     };
 
-    // 更新された記事で置き換え
+    // Replace with updated article
     this.articles[userId][index] = updatedArticle;
 
-    // 記事更新後にデータを保存
+    // Save articles after updating
     this.saveArticles();
 
     return updatedArticle;
   }
 
   deleteArticle(userId: string, articleId: number): boolean {
-    // ユーザーの記事配列が存在するか確認
+    // Check if user's article array exists
     if (!this.articles[userId]) {
       return false;
     }
 
-    // 削除対象の記事インデックスを検索
+    // Find the index of the article to delete
     const index = this.articles[userId].findIndex((article) => article.id === articleId);
 
-    // 記事が見つからない場合はfalseを返す
+    // Return false if article not found
     if (index === -1) {
       return false;
     }
 
-    // 記事を配列から削除
+    // Remove article from array
     this.articles[userId].splice(index, 1);
 
-    // 記事削除後にデータを保存
+    // Save articles after deleting
     this.saveArticles();
 
     return true;

@@ -49,7 +49,7 @@ import Layout from "../layouts/Layout.astro";
       // After getting user profile, fetch their articles
       await fetchArticles(userId || "");
 
-      // フォームの送信イベントリスナーを設定
+      // Setup form submission event listener
       setupFormSubmission();
     } catch (err) {
       console.error(err);
@@ -142,7 +142,7 @@ import Layout from "../layouts/Layout.astro";
     const modalDate = document.getElementById("modalDate");
     const modalDescription = document.getElementById("modalDescription");
 
-    // 編集フィールド
+    // edit
     const titleInput = document.getElementById("titleInput") as HTMLInputElement;
     const descriptionInput = document.getElementById("descriptionInput") as HTMLTextAreaElement;
 
@@ -151,7 +151,6 @@ import Layout from "../layouts/Layout.astro";
       return;
     }
 
-    // 記事IDをモーダルに保存（編集時に使用）
     modal.setAttribute("data-article-id", article.id.toString());
 
     // Format the date for display
@@ -168,7 +167,6 @@ import Layout from "../layouts/Layout.astro";
     modalDate.textContent = formattedDate;
     modalDescription.textContent = article.description;
 
-    // 編集フィールドの初期値を設定
     if (titleInput && descriptionInput) {
       titleInput.value = article.title;
       descriptionInput.value = article.description;
@@ -179,7 +177,7 @@ import Layout from "../layouts/Layout.astro";
     document.body.style.overflow = "hidden"; // Prevent scrolling
   }
 
-  // 編集モードの切り替え
+  // Toggle edit mode
   function toggleEditMode(isEdit: boolean) {
     const modalTitle = document.getElementById("modalTitle");
     const modalTitleEdit = document.getElementById("modalTitleEdit");
@@ -203,7 +201,6 @@ import Layout from "../layouts/Layout.astro";
     }
 
     if (isEdit) {
-      // 編集モードに切り替え
       modalTitle.classList.add("hidden");
       modalTitleEdit.classList.remove("hidden");
       modalDescription.classList.add("hidden");
@@ -212,7 +209,6 @@ import Layout from "../layouts/Layout.astro";
       saveBtn.classList.remove("hidden");
       cancelBtn.classList.remove("hidden");
     } else {
-      // 表示モードに戻す
       modalTitle.classList.remove("hidden");
       modalTitleEdit.classList.add("hidden");
       modalDescription.classList.remove("hidden");
@@ -223,7 +219,6 @@ import Layout from "../layouts/Layout.astro";
     }
   }
 
-  // 記事の編集を保存
   async function saveEditedArticle() {
     if (!userId) {
       alert("Please log in to edit your food post");
@@ -249,14 +244,12 @@ import Layout from "../layouts/Layout.astro";
       return;
     }
 
-    // 更新する内容
     const updatedArticle = {
       title: titleInput.value,
       description: descriptionInput.value,
     };
 
     try {
-      // バックエンドAPIを呼び出して記事を更新（URLを修正）
       const response = await fetch(`http://localhost:3000/articles/${userId}/${articleId}`, {
         method: "PUT",
         headers: {
@@ -272,23 +265,18 @@ import Layout from "../layouts/Layout.astro";
         throw new Error(`Failed to update post: ${response.status}`);
       }
 
-      // 更新された記事データを取得
       const updatedArticleData = await response.json();
 
-      // フロントエンドのデータを更新
       const index = allArticles.findIndex((a) => a.id === articleId);
       if (index !== -1) {
         allArticles[index] = updatedArticleData;
       }
 
-      // モーダルの表示を更新
       modalTitle.textContent = updatedArticleData.title;
       modalDescription.textContent = updatedArticleData.description;
 
-      // 画面の記事一覧も更新
       displayArticles(allArticles);
 
-      // 編集モードを終了
       toggleEditMode(false);
 
       alert("Your food post has been updated!");
@@ -343,18 +331,18 @@ import Layout from "../layouts/Layout.astro";
     });
   }
 
-  // フォーム送信のセットアップを関数として分離
+  // Setup form submission
   function setupFormSubmission() {
     const foodPostForm = document.getElementById("foodPostForm");
     if (!foodPostForm) return;
 
-    // 既存のイベントリスナーを削除（二重登録防止）
+    // Remove existing event listener to prevent duplicates
     foodPostForm.removeEventListener("submit", handleFormSubmit);
-    // 新しいイベントリスナーを追加
+    // Add new event listener
     foodPostForm.addEventListener("submit", handleFormSubmit);
   }
 
-  // フォーム送信ハンドラー関数
+  // Form submission handler
   async function handleFormSubmit(event: any) {
     event.preventDefault();
 
@@ -398,7 +386,7 @@ import Layout from "../layouts/Layout.astro";
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include", // 認証情報を含める
+          credentials: "include", // Include authentication credentials
           body: JSON.stringify(newArticle),
         });
 
@@ -428,66 +416,6 @@ import Layout from "../layouts/Layout.astro";
     };
   }
 
-  // Page initialization
-  document.addEventListener("DOMContentLoaded", () => {
-    console.log("DOM fully loaded");
-
-    // モーダル閉じる機能のセットアップ
-    setupModalCloseFunctionality();
-
-    // 検索機能のセットアップ
-    setupSearchFunctionality();
-
-    // ログアウトボタンのイベントリスナー設定
-    const logoutBtn = document.getElementById("logoutBtn");
-    if (logoutBtn) {
-      logoutBtn.addEventListener("click", async () => {
-        try {
-          await fetch("http://localhost:3000/users/logout", {
-            method: "POST",
-            credentials: "include",
-          });
-          window.location.href = "/login";
-        } catch (err) {
-          console.error(err);
-        }
-      });
-    }
-
-    // 認証チェック（これにより他の必要な初期化も行われる）
-    checkAuth();
-  });
-
-  // Setup modal close functionality
-  function setupModalCloseFunctionality() {
-    const modal = document.getElementById("articleModal");
-    const closeBtn = document.querySelector(".close-modal");
-
-    if (closeBtn && modal) {
-      // Close when clicking the X
-      closeBtn.addEventListener("click", () => {
-        modal.classList.remove("show");
-        document.body.style.overflow = "";
-      });
-
-      // Close when clicking outside the modal content
-      modal.addEventListener("click", (e) => {
-        if (e.target === modal) {
-          modal.classList.remove("show");
-          document.body.style.overflow = "";
-        }
-      });
-
-      // Close when pressing Escape key
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape" && modal.classList.contains("show")) {
-          modal.classList.remove("show");
-          document.body.style.overflow = "";
-        }
-      });
-    }
-  }
-
   // Setup modal functionality
   function setupModalFunctionality() {
     const modal = document.getElementById("articleModal");
@@ -506,7 +434,7 @@ import Layout from "../layouts/Layout.astro";
       closeBtn.addEventListener("click", () => {
         modal.classList.remove("show");
         document.body.style.overflow = "";
-        // 編集モードをリセット
+        // Reset edit mode
         toggleEditMode(false);
       });
 
@@ -515,52 +443,52 @@ import Layout from "../layouts/Layout.astro";
         if (e.target === modal) {
           modal.classList.remove("show");
           document.body.style.overflow = "";
-          // 編集モードをリセット
+          // Reset edit mode
           toggleEditMode(false);
         }
       });
     }
 
-    // 編集ボタンのイベントリスナー
+    // Edit button event listener
     if (editBtn) {
       editBtn.addEventListener("click", () => {
         toggleEditMode(true);
       });
     }
 
-    // 保存ボタンのイベントリスナー
+    // Save button event listener
     if (saveBtn) {
       saveBtn.addEventListener("click", () => {
         saveEditedArticle();
       });
     }
 
-    // キャンセルボタンのイベントリスナー
+    // Cancel button event listener
     if (cancelBtn) {
       cancelBtn.addEventListener("click", () => {
         toggleEditMode(false);
       });
     }
 
-    // 削除ボタンのイベントリスナー
+    // Delete button event listener
     if (deleteBtn && deleteConfirmModal) {
       deleteBtn.addEventListener("click", () => {
-        // メインモーダルを暗くする
+        // Dim the main modal
         modal?.classList.add("background-dim");
 
-        // 確認モーダルを表示
+        // Show confirmation modal
         deleteConfirmModal.classList.add("show");
       });
     }
 
-    // 削除確認モーダルのイベントリスナー
+    // Delete confirmation modal event listener
     if (confirmDeleteBtn) {
       confirmDeleteBtn.addEventListener("click", () => {
         handleArticleDelete();
       });
     }
 
-    // 削除キャンセルボタンのイベントリスナー
+    // Delete cancel button event listener
     if (cancelDeleteBtn && deleteConfirmModal && modal) {
       cancelDeleteBtn.addEventListener("click", () => {
         deleteConfirmModal.classList.remove("show");
@@ -568,7 +496,7 @@ import Layout from "../layouts/Layout.astro";
       });
     }
 
-    // 削除モーダルの閉じるボタン
+    // Delete modal close button
     if (deleteModalCloseBtn && deleteConfirmModal && modal) {
       deleteModalCloseBtn.addEventListener("click", () => {
         deleteConfirmModal.classList.remove("show");
@@ -576,7 +504,7 @@ import Layout from "../layouts/Layout.astro";
       });
     }
 
-    // 削除確認モーダルの外側をクリックしたとき
+    // Click outside delete confirmation modal
     if (deleteConfirmModal && modal) {
       deleteConfirmModal.addEventListener("click", (e) => {
         if (e.target === deleteConfirmModal) {
@@ -591,13 +519,12 @@ import Layout from "../layouts/Layout.astro";
       if (e.key === "Escape" && modal && modal.classList.contains("show")) {
         modal.classList.remove("show");
         document.body.style.overflow = "";
-        // 編集モードをリセット
+        // Reset edit mode
         toggleEditMode(false);
       }
     });
   }
 
-  // 記事削除の処理
   async function handleArticleDelete() {
     if (!userId) {
       alert("Please log in to delete your food post");
@@ -615,7 +542,6 @@ import Layout from "../layouts/Layout.astro";
     const articleId = parseInt(modal.getAttribute("data-article-id") || "0");
 
     try {
-      // バックエンドAPIを呼び出して記事を削除
       const response = await fetch(`http://localhost:3000/articles/${userId}/${articleId}`, {
         method: "DELETE",
         credentials: "include",
@@ -625,13 +551,10 @@ import Layout from "../layouts/Layout.astro";
         throw new Error(`Failed to delete post: ${response.status}`);
       }
 
-      // フロントエンドのデータを更新
       allArticles = allArticles.filter((article) => article.id !== articleId);
 
-      // 画面の記事一覧も更新
       displayArticles(allArticles);
 
-      // モーダルを閉じる
       deleteConfirmModal.classList.remove("show");
       modal.classList.remove("show");
       modal.classList.remove("background-dim");
@@ -642,7 +565,6 @@ import Layout from "../layouts/Layout.astro";
       console.error("Error deleting post:", error);
       alert("Failed to delete your post. Please try again.");
 
-      // エラー時も確認モーダルは閉じる
       deleteConfirmModal.classList.remove("show");
       modal.classList.remove("background-dim");
     }
@@ -652,13 +574,10 @@ import Layout from "../layouts/Layout.astro";
   document.addEventListener("DOMContentLoaded", () => {
     console.log("DOM fully loaded");
 
-    // モーダルの機能をセットアップ
     setupModalFunctionality();
 
-    // 検索機能のセットアップ
     setupSearchFunctionality();
 
-    // ログアウトボタンのイベントリスナー設定
     const logoutBtn = document.getElementById("logoutBtn");
     if (logoutBtn) {
       logoutBtn.addEventListener("click", async () => {
@@ -674,7 +593,6 @@ import Layout from "../layouts/Layout.astro";
       });
     }
 
-    // 認証チェック（これにより他の必要な初期化も行われる）
     checkAuth();
   });
 </script>

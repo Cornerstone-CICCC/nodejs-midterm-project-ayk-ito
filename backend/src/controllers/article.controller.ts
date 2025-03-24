@@ -20,25 +20,25 @@ const createArticle = (req: Request<{ id: string }>, res: Response) => {
   }
 };
 
-// 戻り値の型を void に修正し、return 文を削除
+// Update return type to void and remove return statements
 const updateArticle = (req: Request<{ id: string; articleId: string }>, res: Response): void => {
   const { id, articleId } = req.params;
   const articleData = req.body;
 
   try {
-    // articleIdを数値に変換
+    // Convert articleId to number
     const articleIdNum = parseInt(articleId, 10);
 
     if (isNaN(articleIdNum)) {
       res.status(400).json({ error: "Invalid article ID format" });
-      return; // 早期リターンで処理を終了
+      return; // Early return to end processing
     }
 
     const updatedArticle = articleModel.updateArticle(id, articleIdNum, articleData);
 
     if (!updatedArticle) {
       res.status(404).json({ error: "Article not found" });
-      return; // 早期リターンで処理を終了
+      return; // Early return to end processing
     }
 
     res.status(200).json(updatedArticle);
@@ -47,12 +47,12 @@ const updateArticle = (req: Request<{ id: string; articleId: string }>, res: Res
   }
 };
 
-// 記事削除コントローラー
+// Article deletion controller
 const deleteArticle = (req: Request<{ id: string; articleId: string }>, res: Response): void => {
   const { id, articleId } = req.params;
 
   try {
-    // articleIdを数値に変換
+    // Convert articleId to number
     const articleIdNum = parseInt(articleId, 10);
 
     if (isNaN(articleIdNum)) {
@@ -67,7 +67,7 @@ const deleteArticle = (req: Request<{ id: string; articleId: string }>, res: Res
       return;
     }
 
-    // 成功時は204 No Contentを返す
+    // Return 204 No Content for successful deletion
     res.status(204).send();
   } catch (error) {
     res.status(400).json({ error: (error as Error).message });
