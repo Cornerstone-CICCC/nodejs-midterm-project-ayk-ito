@@ -349,6 +349,7 @@ textarea {
   transform: translateY(0);
 }
 
+/* クローズボタンの位置を調整 */
 .close-modal {
   position: absolute;
   right: 20px;
@@ -357,7 +358,7 @@ textarea {
   font-weight: bold;
   color: #555;
   cursor: pointer;
-  z-index: 1; /* 確実に前面に表示 */
+  z-index: 2; /* z-indexを上げて確実に最前面に */
 }
 
 .close-modal:hover {
@@ -366,10 +367,15 @@ textarea {
 
 .modal-image {
   width: 100%;
-  max-height: 400px;
-  object-fit: cover;
+  height: auto; /* 固定の高さを削除 */
+  max-height: 60vh; /* 画面の60%を最大の高さにする */
+  object-fit: contain; /* cover から contain へ変更して、画像全体を表示 */
   border-radius: 6px;
   margin-bottom: 20px;
+  display: block; /* ブロック要素として表示 */
+  margin-left: auto; /* 水平方向に中央配置 */
+  margin-right: auto;
+  background-color: #f9f9f9; /* 薄い背景色を追加して画像の境界を明確に */
 }
 
 .modal-date {
@@ -397,7 +403,7 @@ textarea {
   }
 
   .modal-image {
-    max-height: 300px;
+    max-height: 50vh; /* モバイルでは50%の高さに制限 */
   }
 }
 
@@ -407,6 +413,8 @@ textarea {
   justify-content: flex-end;
   gap: 10px;
   margin-bottom: 15px;
+  /* クローズボタンを避けるために右側に余白を追加 */
+  padding-right: 35px;
 }
 
 .edit-btn,
