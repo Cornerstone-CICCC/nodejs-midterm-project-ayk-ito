@@ -39,10 +39,7 @@ class UserModel {
   async login() {}
 
   async checkUserPass(username: string, password: string) {
-    console.log(this.users);
-
     const user = this.users.find((u) => u.username === username);
-    console.log(user);
 
     if (!user) return false;
     const isMatch: boolean = await bcrypt.compare(password, user.password);

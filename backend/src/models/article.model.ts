@@ -20,8 +20,6 @@ class ArticleModel {
   } = {};
 
   findAll(userId: string) {
-    console.log(userId, this.articles[userId]);
-
     return this.articles[userId] || [];
   }
 

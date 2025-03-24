@@ -142,10 +142,17 @@ import Layout from "../layouts/Layout.astro";
     const modalDate = document.getElementById("modalDate");
     const modalDescription = document.getElementById("modalDescription");
 
+    // 編集フィールド
+    const titleInput = document.getElementById("titleInput") as HTMLInputElement;
+    const descriptionInput = document.getElementById("descriptionInput") as HTMLTextAreaElement;
+
     if (!modal || !modalImage || !modalTitle || !modalDate || !modalDescription) {
       console.error("Modal elements not found");
       return;
     }
+
+    // 記事IDをモーダルに保存（編集時に使用）
+    modal.setAttribute("data-article-id", article.id.toString());
 
     // Format the date for display
     const formattedDate = new Date(article.date).toLocaleDateString("en-US", {
@@ -161,9 +168,133 @@ import Layout from "../layouts/Layout.astro";
     modalDate.textContent = formattedDate;
     modalDescription.textContent = article.description;
 
+    // 編集フィールドの初期値を設定
+    if (titleInput && descriptionInput) {
+      titleInput.value = article.title;
+      descriptionInput.value = article.description;
+    }
+
     // Show the modal
     modal.classList.add("show");
     document.body.style.overflow = "hidden"; // Prevent scrolling
+  }
+
+  // 編集モードの切り替え
+  function toggleEditMode(isEdit: boolean) {
+    const modalTitle = document.getElementById("modalTitle");
+    const modalTitleEdit = document.getElementById("modalTitleEdit");
+    const modalDescription = document.getElementById("modalDescription");
+    const modalDescriptionEdit = document.getElementById("modalDescriptionEdit");
+    const editBtn = document.getElementById("editArticleBtn");
+    const saveBtn = document.getElementById("saveArticleBtn");
+    const cancelBtn = document.getElementById("cancelEditBtn");
+
+    if (
+      !modalTitle ||
+      !modalTitleEdit ||
+      !modalDescription ||
+      !modalDescriptionEdit ||
+      !editBtn ||
+      !saveBtn ||
+      !cancelBtn
+    ) {
+      console.error("Modal edit elements not found");
+      return;
+    }
+
+    if (isEdit) {
+      // 編集モードに切り替え
+      modalTitle.classList.add("hidden");
+      modalTitleEdit.classList.remove("hidden");
+      modalDescription.classList.add("hidden");
+      modalDescriptionEdit.classList.remove("hidden");
+      editBtn.classList.add("hidden");
+      saveBtn.classList.remove("hidden");
+      cancelBtn.classList.remove("hidden");
+    } else {
+      // 表示モードに戻す
+      modalTitle.classList.remove("hidden");
+      modalTitleEdit.classList.add("hidden");
+      modalDescription.classList.remove("hidden");
+      modalDescriptionEdit.classList.add("hidden");
+      editBtn.classList.remove("hidden");
+      saveBtn.classList.add("hidden");
+      cancelBtn.classList.add("hidden");
+    }
+  }
+
+  // 記事の編集を保存
+  async function saveEditedArticle() {
+    if (!userId) {
+      alert("Please log in to edit your food post");
+      return;
+    }
+
+    const modal = document.getElementById("articleModal");
+    const titleInput = document.getElementById("titleInput") as HTMLInputElement;
+    const descriptionInput = document.getElementById("descriptionInput") as HTMLTextAreaElement;
+    const modalTitle = document.getElementById("modalTitle");
+    const modalDescription = document.getElementById("modalDescription");
+
+    if (!modal || !titleInput || !descriptionInput || !modalTitle || !modalDescription) {
+      console.error("Modal elements not found when saving");
+      return;
+    }
+
+    const articleId = parseInt(modal.getAttribute("data-article-id") || "0");
+    const article = allArticles.find((a) => a.id === articleId);
+
+    if (!article) {
+      console.error("Article not found");
+      return;
+    }
+
+    // 更新する内容
+    const updatedArticle = {
+      ...article,
+      title: titleInput.value,
+      description: descriptionInput.value,
+    };
+
+    try {
+      // ここでは更新APIがないためフロントエンドだけで更新
+      // 実際のアプリでは以下のようなAPIコールが必要
+      /*
+      const response = await fetch(`http://localhost:3000/articles/${userId}/${articleId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(updatedArticle),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to update post: ${response.status}`);
+      }
+      */
+
+      // フロントエンドのデータを更新
+      const index = allArticles.findIndex((a) => a.id === articleId);
+      if (index !== -1) {
+        allArticles[index] = updatedArticle;
+      }
+
+      // モーダルの表示を更新
+      modalTitle.textContent = updatedArticle.title;
+      modalDescription.textContent = updatedArticle.description;
+
+      // 画面の記事一覧も更新
+      displayArticles(allArticles);
+
+      // 編集モードを終了
+      toggleEditMode(false);
+
+      alert("Your food post has been updated!");
+    } catch (error) {
+      console.error("Error updating post:", error);
+      alert("Failed to update your post. Please try again.");
+    }
   }
 
   // Search functionality
@@ -355,4 +486,94 @@ import Layout from "../layouts/Layout.astro";
       });
     }
   }
+
+  // Setup modal functionality
+  function setupModalFunctionality() {
+    const modal = document.getElementById("articleModal");
+    const closeBtn = document.querySelector(".close-modal");
+    const editBtn = document.getElementById("editArticleBtn");
+    const saveBtn = document.getElementById("saveArticleBtn");
+    const cancelBtn = document.getElementById("cancelEditBtn");
+
+    if (closeBtn && modal) {
+      // Close when clicking the X
+      closeBtn.addEventListener("click", () => {
+        modal.classList.remove("show");
+        document.body.style.overflow = "";
+        // 編集モードをリセット
+        toggleEditMode(false);
+      });
+
+      // Close when clicking outside the modal content
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) {
+          modal.classList.remove("show");
+          document.body.style.overflow = "";
+          // 編集モードをリセット
+          toggleEditMode(false);
+        }
+      });
+    }
+
+    // 編集ボタンのイベントリスナー
+    if (editBtn) {
+      editBtn.addEventListener("click", () => {
+        toggleEditMode(true);
+      });
+    }
+
+    // 保存ボタンのイベントリスナー
+    if (saveBtn) {
+      saveBtn.addEventListener("click", () => {
+        saveEditedArticle();
+      });
+    }
+
+    // キャンセルボタンのイベントリスナー
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", () => {
+        toggleEditMode(false);
+      });
+    }
+
+    // Close when pressing Escape key
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal && modal.classList.contains("show")) {
+        modal.classList.remove("show");
+        document.body.style.overflow = "";
+        // 編集モードをリセット
+        toggleEditMode(false);
+      }
+    });
+  }
+
+  // Page initialization
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log("DOM fully loaded");
+
+    // モーダルの機能をセットアップ
+    setupModalFunctionality();
+
+    // 検索機能のセットアップ
+    setupSearchFunctionality();
+
+    // ログアウトボタンのイベントリスナー設定
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", async () => {
+        try {
+          await fetch("http://localhost:3000/users/logout", {
+            method: "POST",
+            credentials: "include",
+          });
+          window.location.href = "/login";
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    }
+
+    // 認証チェック（これにより他の必要な初期化も行われる）
+    checkAuth();
+  });
 </script>

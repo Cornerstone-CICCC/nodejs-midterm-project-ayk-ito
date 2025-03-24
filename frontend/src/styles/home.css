@@ -400,3 +400,85 @@ textarea {
     max-height: 300px;
   }
 }
+
+/* Modal edit styles */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.edit-btn,
+.save-btn,
+.cancel-btn {
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+.edit-btn {
+  background-color: var(--accent-color);
+  color: var(--text-color);
+}
+
+.edit-btn:hover {
+  background-color: #ffc233;
+}
+
+.save-btn {
+  background-color: #4caf50;
+  color: white;
+}
+
+.save-btn:hover {
+  background-color: #3d8b40;
+}
+
+.cancel-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #d32f2f;
+}
+
+.edit-field {
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.edit-input,
+.edit-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.edit-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.editable.highlight {
+  background-color: rgba(255, 209, 102, 0.2);
+  padding: 5px;
+  border-radius: 3px;
+  transition: background-color 0.3s;
+}
+
+.hidden {
+  display: none;
+}
+
+/* モーダル内のテキストコンテンツのスタイリング */
+.modal-text-content {
+  margin-top: 15px;
+}

@@ -71,11 +71,26 @@ import "../styles/home.css";
   <div id="articleModal" class="modal">
     <div class="modal-content">
       <span class="close-modal">&times;</span>
+      <div class="modal-actions">
+        <button id="editArticleBtn" class="edit-btn">Edit</button>
+        <button id="saveArticleBtn" class="save-btn hidden">Save</button>
+        <button id="cancelEditBtn" class="cancel-btn hidden">Cancel</button>
+      </div>
       <div id="modalContent">
         <img id="modalImage" class="modal-image" src="" alt="" />
-        <h2 id="modalTitle"></h2>
-        <p id="modalDate" class="modal-date"></p>
-        <p id="modalDescription"></p>
+        <div class="modal-text-content">
+          <h2 id="modalTitle" class="editable"></h2>
+          <div id="modalTitleEdit" class="edit-field hidden">
+            <input type="text" id="titleInput" class="edit-input" />
+          </div>
+
+          <p id="modalDate" class="modal-date"></p>
+
+          <p id="modalDescription" class="editable"></p>
+          <div id="modalDescriptionEdit" class="edit-field hidden">
+            <textarea id="descriptionInput" class="edit-textarea" rows="5"></textarea>
+          </div>
+        </div>
       </div>
     </div>
   </div>
