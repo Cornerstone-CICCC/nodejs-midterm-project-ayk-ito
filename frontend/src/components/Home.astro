@@ -46,9 +46,37 @@ import "../styles/home.css";
 
   <section class="food-posts">
     <h2>Recent Delicious Moments</h2>
+
+    <!-- Search form -->
+    <div class="search-container">
+      <form id="searchForm" class="search-form">
+        <input
+          type="text"
+          id="searchInput"
+          placeholder="Search food by name..."
+          class="search-input"
+        />
+        <button type="submit" class="search-button">Search</button>
+        <button type="button" id="resetSearch" class="reset-button">Reset</button>
+      </form>
+    </div>
+
     <div class="posts-container" id="postsContainer">
       <!-- Posts will be dynamically populated from the API -->
       <div class="loading">Loading your delicious moments...</div>
     </div>
   </section>
+
+  <!-- Modal for displaying article details -->
+  <div id="articleModal" class="modal">
+    <div class="modal-content">
+      <span class="close-modal">&times;</span>
+      <div id="modalContent">
+        <img id="modalImage" class="modal-image" src="" alt="" />
+        <h2 id="modalTitle"></h2>
+        <p id="modalDate" class="modal-date"></p>
+        <p id="modalDescription"></p>
+      </div>
+    </div>
+  </div>
 </div>

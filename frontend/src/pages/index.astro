@@ -21,6 +21,7 @@ import Layout from "../layouts/Layout.astro";
   }
 
   let userId: string | null = null;
+  let allArticles: Article[] = [];
 
   async function checkAuth() {
     try {
@@ -47,6 +48,9 @@ import Layout from "../layouts/Layout.astro";
 
       // After getting user profile, fetch their articles
       await fetchArticles(userId || "");
+
+      // フォームの送信イベントリスナーを設定
+      setupFormSubmission();
     } catch (err) {
       console.error(err);
       window.location.href = "/login";
@@ -65,6 +69,9 @@ import Layout from "../layouts/Layout.astro";
       }
 
       const articles: Article[] = await res.json();
+
+      // Store all articles for filtering
+      allArticles = articles;
 
       // Update the DOM with the fetched articles
       displayArticles(articles);
@@ -95,7 +102,7 @@ import Layout from "../layouts/Layout.astro";
       });
 
       const postHtml = `
-        <div class="post-card">
+        <div class="post-card" data-id="${article.id}">
           <img src="${article.imageUrl}" alt="${article.title}" class="food-image">
           <div class="post-content">
             <h3>${article.title}</h3>
@@ -107,10 +114,116 @@ import Layout from "../layouts/Layout.astro";
 
       postsContainer.innerHTML += postHtml;
     });
+
+    // Add click event listeners to all post cards for modal
+    addPostCardEventListeners(articles);
   }
 
-  // Handle form submission
-  document.getElementById("foodPostForm")?.addEventListener("submit", async function (event) {
+  // Function to add click event listeners to post cards
+  function addPostCardEventListeners(articles: Article[]) {
+    document.querySelectorAll(".post-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        // Find the article that was clicked
+        const articleId = parseInt((card as HTMLElement).dataset.id || "0");
+        const article = articles.find((a) => a.id === articleId);
+
+        if (article) {
+          showArticleModal(article);
+        }
+      });
+    });
+  }
+
+  // Function to show article modal
+  function showArticleModal(article: Article) {
+    const modal = document.getElementById("articleModal");
+    const modalImage = document.getElementById("modalImage") as HTMLImageElement;
+    const modalTitle = document.getElementById("modalTitle");
+    const modalDate = document.getElementById("modalDate");
+    const modalDescription = document.getElementById("modalDescription");
+
+    if (!modal || !modalImage || !modalTitle || !modalDate || !modalDescription) {
+      console.error("Modal elements not found");
+      return;
+    }
+
+    // Format the date for display
+    const formattedDate = new Date(article.date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    // Set the modal content
+    modalImage.src = article.imageUrl;
+    modalImage.alt = article.title;
+    modalTitle.textContent = article.title;
+    modalDate.textContent = formattedDate;
+    modalDescription.textContent = article.description;
+
+    // Show the modal
+    modal.classList.add("show");
+    document.body.style.overflow = "hidden"; // Prevent scrolling
+  }
+
+  // Search functionality
+  function setupSearchFunctionality() {
+    const searchForm = document.getElementById("searchForm");
+    const searchInput = document.getElementById("searchInput") as HTMLInputElement;
+    const resetButton = document.getElementById("resetSearch");
+
+    if (!searchForm || !searchInput || !resetButton) {
+      console.error("Search elements not found");
+      return;
+    }
+
+    // Handle search form submission
+    searchForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const searchTerm = searchInput.value.trim().toLowerCase();
+
+      if (searchTerm === "") {
+        // If search is empty, show all articles
+        displayArticles(allArticles);
+        return;
+      }
+
+      // Filter articles based on search term (partial match on title)
+      const filteredArticles = allArticles.filter((article) =>
+        article.title.toLowerCase().includes(searchTerm)
+      );
+
+      // Display filtered articles
+      if (filteredArticles.length === 0) {
+        const postsContainer = document.getElementById("postsContainer");
+        if (postsContainer) {
+          postsContainer.innerHTML = `<p class='no-results'>No food posts matching "${searchTerm}" found.</p>`;
+        }
+      } else {
+        displayArticles(filteredArticles);
+      }
+    });
+
+    // Reset search and show all articles
+    resetButton.addEventListener("click", () => {
+      searchInput.value = "";
+      displayArticles(allArticles);
+    });
+  }
+
+  // フォーム送信のセットアップを関数として分離
+  function setupFormSubmission() {
+    const foodPostForm = document.getElementById("foodPostForm");
+    if (!foodPostForm) return;
+
+    // 既存のイベントリスナーを削除（二重登録防止）
+    foodPostForm.removeEventListener("submit", handleFormSubmit);
+    // 新しいイベントリスナーを追加
+    foodPostForm.addEventListener("submit", handleFormSubmit);
+  }
+
+  // フォーム送信ハンドラー関数
+  async function handleFormSubmit(event: any) {
     event.preventDefault();
 
     if (!userId) {
@@ -146,20 +259,21 @@ import Layout from "../layouts/Layout.astro";
       };
 
       try {
-        // Call the API endpoint to create a new article
-        console.log(userId);
+        console.log("Submitting article for user:", userId);
 
         const response = await fetch(`http://localhost:3000/articles/${userId}`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include",
+          credentials: "include", // 認証情報を含める
           body: JSON.stringify(newArticle),
         });
 
         if (!response.ok) {
-          throw new Error("Failed to create post");
+          const errorData = await response.json().catch(() => ({}));
+          console.error("Server response:", response.status, errorData);
+          throw new Error(`Failed to create post: ${response.status}`);
         }
 
         alert("Your delicious moment has been shared!");
@@ -171,7 +285,7 @@ import Layout from "../layouts/Layout.astro";
 
         // Hide preview
         const preview = document.getElementById("imagePreview") as HTMLImageElement;
-        preview.classList.add("hidden");
+        if (preview) preview.classList.add("hidden");
 
         // Refresh articles
         await fetchArticles(userId || "");
@@ -180,20 +294,65 @@ import Layout from "../layouts/Layout.astro";
         alert("Failed to share your post. Please try again.");
       }
     };
-  });
+  }
 
-  document.getElementById("logoutBtn")?.addEventListener("click", async () => {
-    try {
-      await fetch("http://localhost:3000/users/logout", {
-        method: "POST",
-        credentials: "include",
+  // Page initialization
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log("DOM fully loaded");
+
+    // モーダル閉じる機能のセットアップ
+    setupModalCloseFunctionality();
+
+    // 検索機能のセットアップ
+    setupSearchFunctionality();
+
+    // ログアウトボタンのイベントリスナー設定
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", async () => {
+        try {
+          await fetch("http://localhost:3000/users/logout", {
+            method: "POST",
+            credentials: "include",
+          });
+          window.location.href = "/login";
+        } catch (err) {
+          console.error(err);
+        }
       });
-      window.location.href = "/login";
-    } catch (err) {
-      console.error(err);
     }
+
+    // 認証チェック（これにより他の必要な初期化も行われる）
+    checkAuth();
   });
 
-  // Check authentication when page loads
-  checkAuth();
+  // Setup modal close functionality
+  function setupModalCloseFunctionality() {
+    const modal = document.getElementById("articleModal");
+    const closeBtn = document.querySelector(".close-modal");
+
+    if (closeBtn && modal) {
+      // Close when clicking the X
+      closeBtn.addEventListener("click", () => {
+        modal.classList.remove("show");
+        document.body.style.overflow = "";
+      });
+
+      // Close when clicking outside the modal content
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) {
+          modal.classList.remove("show");
+          document.body.style.overflow = "";
+        }
+      });
+
+      // Close when pressing Escape key
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && modal.classList.contains("show")) {
+          modal.classList.remove("show");
+          document.body.style.overflow = "";
+        }
+      });
+    }
+  }
 </script>
