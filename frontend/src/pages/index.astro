@@ -1,0 +1,598 @@
+---
+import Home from "../components/Home.astro";
+import Layout from "../layouts/Layout.astro";
+
+// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
+// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+---
+
+<Layout>
+  <Home />
+</Layout>
+
+<script>
+  // Define the Article interface to match API response
+  interface Article {
+    id: number;
+    title: string;
+    date: string;
+    description: string;
+    imageUrl: string;
+  }
+
+  let userId: string | null = null;
+  let allArticles: Article[] = [];
+
+  async function checkAuth() {
+    try {
+      const res = await fetch("http://localhost:3000/users/profile", {
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        window.location.href = "/login";
+        return;
+      }
+
+      const data = await res.json();
+      userId = data.id; // Store user ID for article fetching
+
+      const profileInfo = document.getElementById("profileInfo");
+      if (profileInfo) {
+        profileInfo.innerHTML = `
+			<p><strong>Username:</strong> ${data.username}</p>
+			<p><strong>First Name:</strong> ${data.firstname}</p>
+			<p><strong>Last Name:</strong> ${data.lastname}</p>
+		  `;
+      }
+
+      // After getting user profile, fetch their articles
+      await fetchArticles(userId || "");
+
+      // Setup form submission event listener
+      setupFormSubmission();
+    } catch (err) {
+      console.error(err);
+      window.location.href = "/login";
+    }
+  }
+
+  async function fetchArticles(userId: string) {
+    try {
+      const res = await fetch(`http://localhost:3000/articles/${userId}`, {
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        console.error("Failed to fetch articles");
+        return;
+      }
+
+      const articles: Article[] = await res.json();
+
+      // Store all articles for filtering
+      allArticles = articles;
+
+      // Update the DOM with the fetched articles
+      displayArticles(articles);
+    } catch (err) {
+      console.error("Error fetching articles:", err);
+    }
+  }
+
+  function displayArticles(articles: Article[]) {
+    const postsContainer = document.getElementById("postsContainer");
+    if (!postsContainer) return;
+
+    // Clear existing content
+    postsContainer.innerHTML = "";
+
+    if (articles.length === 0) {
+      postsContainer.innerHTML =
+        "<p class='no-posts'>No food posts yet. Share your first delicious moment!</p>";
+      return;
+    }
+
+    // Add each article to the container
+    articles.forEach((article) => {
+      const formattedDate = new Date(article.date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      const postHtml = `
+        <div class="post-card" data-id="${article.id}">
+          <img src="${article.imageUrl}" alt="${article.title}" class="food-image">
+          <div class="post-content">
+            <h3>${article.title}</h3>
+            <p class="post-date">${formattedDate}</p>
+            <p>${article.description}</p>
+          </div>
+        </div>
+      `;
+
+      postsContainer.innerHTML += postHtml;
+    });
+
+    // Add click event listeners to all post cards for modal
+    addPostCardEventListeners(articles);
+  }
+
+  // Function to add click event listeners to post cards
+  function addPostCardEventListeners(articles: Article[]) {
+    document.querySelectorAll(".post-card").forEach((card) => {
+      card.addEventListener("click", () => {
+        // Find the article that was clicked
+        const articleId = parseInt((card as HTMLElement).dataset.id || "0");
+        const article = articles.find((a) => a.id === articleId);
+
+        if (article) {
+          showArticleModal(article);
+        }
+      });
+    });
+  }
+
+  // Function to show article modal
+  function showArticleModal(article: Article) {
+    const modal = document.getElementById("articleModal");
+    const modalImage = document.getElementById("modalImage") as HTMLImageElement;
+    const modalTitle = document.getElementById("modalTitle");
+    const modalDate = document.getElementById("modalDate");
+    const modalDescription = document.getElementById("modalDescription");
+
+    // edit
+    const titleInput = document.getElementById("titleInput") as HTMLInputElement;
+    const descriptionInput = document.getElementById("descriptionInput") as HTMLTextAreaElement;
+
+    if (!modal || !modalImage || !modalTitle || !modalDate || !modalDescription) {
+      console.error("Modal elements not found");
+      return;
+    }
+
+    modal.setAttribute("data-article-id", article.id.toString());
+
+    // Format the date for display
+    const formattedDate = new Date(article.date).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    // Set the modal content
+    modalImage.src = article.imageUrl;
+    modalImage.alt = article.title;
+    modalTitle.textContent = article.title;
+    modalDate.textContent = formattedDate;
+    modalDescription.textContent = article.description;
+
+    if (titleInput && descriptionInput) {
+      titleInput.value = article.title;
+      descriptionInput.value = article.description;
+    }
+
+    // Show the modal
+    modal.classList.add("show");
+    document.body.style.overflow = "hidden"; // Prevent scrolling
+  }
+
+  // Toggle edit mode
+  function toggleEditMode(isEdit: boolean) {
+    const modalTitle = document.getElementById("modalTitle");
+    const modalTitleEdit = document.getElementById("modalTitleEdit");
+    const modalDescription = document.getElementById("modalDescription");
+    const modalDescriptionEdit = document.getElementById("modalDescriptionEdit");
+    const editBtn = document.getElementById("editArticleBtn");
+    const saveBtn = document.getElementById("saveArticleBtn");
+    const cancelBtn = document.getElementById("cancelEditBtn");
+
+    if (
+      !modalTitle ||
+      !modalTitleEdit ||
+      !modalDescription ||
+      !modalDescriptionEdit ||
+      !editBtn ||
+      !saveBtn ||
+      !cancelBtn
+    ) {
+      console.error("Modal edit elements not found");
+      return;
+    }
+
+    if (isEdit) {
+      modalTitle.classList.add("hidden");
+      modalTitleEdit.classList.remove("hidden");
+      modalDescription.classList.add("hidden");
+      modalDescriptionEdit.classList.remove("hidden");
+      editBtn.classList.add("hidden");
+      saveBtn.classList.remove("hidden");
+      cancelBtn.classList.remove("hidden");
+    } else {
+      modalTitle.classList.remove("hidden");
+      modalTitleEdit.classList.add("hidden");
+      modalDescription.classList.remove("hidden");
+      modalDescriptionEdit.classList.add("hidden");
+      editBtn.classList.remove("hidden");
+      saveBtn.classList.add("hidden");
+      cancelBtn.classList.add("hidden");
+    }
+  }
+
+  async function saveEditedArticle() {
+    if (!userId) {
+      alert("Please log in to edit your food post");
+      return;
+    }
+
+    const modal = document.getElementById("articleModal");
+    const titleInput = document.getElementById("titleInput") as HTMLInputElement;
+    const descriptionInput = document.getElementById("descriptionInput") as HTMLTextAreaElement;
+    const modalTitle = document.getElementById("modalTitle");
+    const modalDescription = document.getElementById("modalDescription");
+
+    if (!modal || !titleInput || !descriptionInput || !modalTitle || !modalDescription) {
+      console.error("Modal elements not found when saving");
+      return;
+    }
+
+    const articleId = parseInt(modal.getAttribute("data-article-id") || "0");
+    const article = allArticles.find((a) => a.id === articleId);
+
+    if (!article) {
+      console.error("Article not found");
+      return;
+    }
+
+    const updatedArticle = {
+      title: titleInput.value,
+      description: descriptionInput.value,
+    };
+
+    try {
+      const response = await fetch(`http://localhost:3000/articles/${userId}/${articleId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(updatedArticle),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.error("Server response:", response.status, errorData);
+        throw new Error(`Failed to update post: ${response.status}`);
+      }
+
+      const updatedArticleData = await response.json();
+
+      const index = allArticles.findIndex((a) => a.id === articleId);
+      if (index !== -1) {
+        allArticles[index] = updatedArticleData;
+      }
+
+      modalTitle.textContent = updatedArticleData.title;
+      modalDescription.textContent = updatedArticleData.description;
+
+      displayArticles(allArticles);
+
+      toggleEditMode(false);
+
+      alert("Your food post has been updated!");
+    } catch (error) {
+      console.error("Error updating post:", error);
+      alert("Failed to update your post. Please try again.");
+    }
+  }
+
+  // Search functionality
+  function setupSearchFunctionality() {
+    const searchForm = document.getElementById("searchForm");
+    const searchInput = document.getElementById("searchInput") as HTMLInputElement;
+    const resetButton = document.getElementById("resetSearch");
+
+    if (!searchForm || !searchInput || !resetButton) {
+      console.error("Search elements not found");
+      return;
+    }
+
+    // Handle search form submission
+    searchForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const searchTerm = searchInput.value.trim().toLowerCase();
+
+      if (searchTerm === "") {
+        // If search is empty, show all articles
+        displayArticles(allArticles);
+        return;
+      }
+
+      // Filter articles based on search term (partial match on title)
+      const filteredArticles = allArticles.filter((article) =>
+        article.title.toLowerCase().includes(searchTerm)
+      );
+
+      // Display filtered articles
+      if (filteredArticles.length === 0) {
+        const postsContainer = document.getElementById("postsContainer");
+        if (postsContainer) {
+          postsContainer.innerHTML = `<p class='no-results'>No food posts matching "${searchTerm}" found.</p>`;
+        }
+      } else {
+        displayArticles(filteredArticles);
+      }
+    });
+
+    // Reset search and show all articles
+    resetButton.addEventListener("click", () => {
+      searchInput.value = "";
+      displayArticles(allArticles);
+    });
+  }
+
+  // Setup form submission
+  function setupFormSubmission() {
+    const foodPostForm = document.getElementById("foodPostForm");
+    if (!foodPostForm) return;
+
+    // Remove existing event listener to prevent duplicates
+    foodPostForm.removeEventListener("submit", handleFormSubmit);
+    // Add new event listener
+    foodPostForm.addEventListener("submit", handleFormSubmit);
+  }
+
+  // Form submission handler
+  async function handleFormSubmit(event: any) {
+    event.preventDefault();
+
+    if (!userId) {
+      alert("Please log in to share your food");
+      return;
+    }
+
+    const titleInput = document.getElementById("foodTitle") as HTMLInputElement;
+    const descriptionInput = document.getElementById("foodDescription") as HTMLTextAreaElement;
+    const imageInput = document.getElementById("foodImage") as HTMLInputElement;
+
+    if (
+      !titleInput.value ||
+      !descriptionInput.value ||
+      !imageInput.files ||
+      imageInput.files.length === 0
+    ) {
+      alert("Please fill all fields and select an image");
+      return;
+    }
+
+    // Use FileReader to convert image to data URL
+    const reader = new FileReader();
+    reader.readAsDataURL(imageInput.files[0]);
+
+    reader.onload = async () => {
+      // Create article data
+      const newArticle = {
+        title: titleInput.value,
+        description: descriptionInput.value,
+        date: new Date().toISOString().split("T")[0], // Current date in YYYY-MM-DD format
+        imageUrl: reader.result,
+      };
+
+      try {
+        console.log("Submitting article for user:", userId);
+
+        const response = await fetch(`http://localhost:3000/articles/${userId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include", // Include authentication credentials
+          body: JSON.stringify(newArticle),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error("Server response:", response.status, errorData);
+          throw new Error(`Failed to create post: ${response.status}`);
+        }
+
+        alert("Your delicious moment has been shared!");
+
+        // Reset form
+        titleInput.value = "";
+        descriptionInput.value = "";
+        imageInput.value = "";
+
+        // Hide preview
+        const preview = document.getElementById("imagePreview") as HTMLImageElement;
+        if (preview) preview.classList.add("hidden");
+
+        // Refresh articles
+        await fetchArticles(userId || "");
+      } catch (error) {
+        console.error("Error creating post:", error);
+        alert("Failed to share your post. Please try again.");
+      }
+    };
+  }
+
+  // Setup modal functionality
+  function setupModalFunctionality() {
+    const modal = document.getElementById("articleModal");
+    const closeBtn = document.querySelector(".close-modal");
+    const editBtn = document.getElementById("editArticleBtn");
+    const saveBtn = document.getElementById("saveArticleBtn");
+    const cancelBtn = document.getElementById("cancelEditBtn");
+    const deleteBtn = document.getElementById("deleteArticleBtn");
+    const deleteConfirmModal = document.getElementById("deleteConfirmModal");
+    const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
+    const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+    const deleteModalCloseBtn = document.querySelector("#deleteConfirmModal .close-modal");
+
+    if (closeBtn && modal) {
+      // Close when clicking the X
+      closeBtn.addEventListener("click", () => {
+        modal.classList.remove("show");
+        document.body.style.overflow = "";
+        // Reset edit mode
+        toggleEditMode(false);
+      });
+
+      // Close when clicking outside the modal content
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) {
+          modal.classList.remove("show");
+          document.body.style.overflow = "";
+          // Reset edit mode
+          toggleEditMode(false);
+        }
+      });
+    }
+
+    // Edit button event listener
+    if (editBtn) {
+      editBtn.addEventListener("click", () => {
+        toggleEditMode(true);
+      });
+    }
+
+    // Save button event listener
+    if (saveBtn) {
+      saveBtn.addEventListener("click", () => {
+        saveEditedArticle();
+      });
+    }
+
+    // Cancel button event listener
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", () => {
+        toggleEditMode(false);
+      });
+    }
+
+    // Delete button event listener
+    if (deleteBtn && deleteConfirmModal) {
+      deleteBtn.addEventListener("click", () => {
+        // Dim the main modal
+        modal?.classList.add("background-dim");
+
+        // Show confirmation modal
+        deleteConfirmModal.classList.add("show");
+      });
+    }
+
+    // Delete confirmation modal event listener
+    if (confirmDeleteBtn) {
+      confirmDeleteBtn.addEventListener("click", () => {
+        handleArticleDelete();
+      });
+    }
+
+    // Delete cancel button event listener
+    if (cancelDeleteBtn && deleteConfirmModal && modal) {
+      cancelDeleteBtn.addEventListener("click", () => {
+        deleteConfirmModal.classList.remove("show");
+        modal.classList.remove("background-dim");
+      });
+    }
+
+    // Delete modal close button
+    if (deleteModalCloseBtn && deleteConfirmModal && modal) {
+      deleteModalCloseBtn.addEventListener("click", () => {
+        deleteConfirmModal.classList.remove("show");
+        modal.classList.remove("background-dim");
+      });
+    }
+
+    // Click outside delete confirmation modal
+    if (deleteConfirmModal && modal) {
+      deleteConfirmModal.addEventListener("click", (e) => {
+        if (e.target === deleteConfirmModal) {
+          deleteConfirmModal.classList.remove("show");
+          modal.classList.remove("background-dim");
+        }
+      });
+    }
+
+    // Close when pressing Escape key
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal && modal.classList.contains("show")) {
+        modal.classList.remove("show");
+        document.body.style.overflow = "";
+        // Reset edit mode
+        toggleEditMode(false);
+      }
+    });
+  }
+
+  async function handleArticleDelete() {
+    if (!userId) {
+      alert("Please log in to delete your food post");
+      return;
+    }
+
+    const modal = document.getElementById("articleModal");
+    const deleteConfirmModal = document.getElementById("deleteConfirmModal");
+
+    if (!modal || !deleteConfirmModal) {
+      console.error("Modal elements not found when deleting");
+      return;
+    }
+
+    const articleId = parseInt(modal.getAttribute("data-article-id") || "0");
+
+    try {
+      const response = await fetch(`http://localhost:3000/articles/${userId}/${articleId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete post: ${response.status}`);
+      }
+
+      allArticles = allArticles.filter((article) => article.id !== articleId);
+
+      displayArticles(allArticles);
+
+      deleteConfirmModal.classList.remove("show");
+      modal.classList.remove("show");
+      modal.classList.remove("background-dim");
+      document.body.style.overflow = "";
+
+      alert("Your food post has been deleted!");
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      alert("Failed to delete your post. Please try again.");
+
+      deleteConfirmModal.classList.remove("show");
+      modal.classList.remove("background-dim");
+    }
+  }
+
+  // Page initialization
+  document.addEventListener("DOMContentLoaded", () => {
+    console.log("DOM fully loaded");
+
+    setupModalFunctionality();
+
+    setupSearchFunctionality();
+
+    const logoutBtn = document.getElementById("logoutBtn");
+    if (logoutBtn) {
+      logoutBtn.addEventListener("click", async () => {
+        try {
+          await fetch("http://localhost:3000/users/logout", {
+            method: "POST",
+            credentials: "include",
+          });
+          window.location.href = "/login";
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    }
+
+    checkAuth();
+  });
+</script>

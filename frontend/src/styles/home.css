@@ -1,0 +1,536 @@
+:root {
+  --primary-color: #ff9a8b;
+  --secondary-color: #ff6b6b;
+  --accent-color: #ffd166;
+  --background-color: #fff9f5;
+  --text-color: #5e4c5a;
+  --card-color: #ffffff;
+  --border-color: #ffcdb2;
+}
+
+.food-blog-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 2rem;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.2);
+}
+
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+.user-profile {
+  margin-bottom: 2rem;
+}
+
+.profile-card {
+  background-color: var(--card-color);
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+}
+
+.logout-btn {
+  background-color: var(--secondary-color);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background-color 0.3s;
+}
+
+.logout-btn:hover {
+  background-color: #ff5252;
+}
+
+.post-form-section {
+  background-color: var(--card-color);
+  padding: 2rem;
+  border-radius: 10px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+}
+
+.food-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+label {
+  font-weight: 600;
+}
+
+input,
+textarea {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-family: inherit;
+}
+
+.submit-btn {
+  background-color: var(--accent-color);
+  color: var(--text-color);
+  border: none;
+  padding: 12px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.submit-btn:hover {
+  background-color: #ffc233;
+}
+
+.form-preview {
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+#imagePreview {
+  max-width: 100%;
+  max-height: 300px;
+  border-radius: 8px;
+}
+
+.hidden {
+  display: none;
+}
+
+.food-posts {
+  margin-top: 3rem;
+}
+
+.posts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+.post-card {
+  background-color: var(--card-color);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s;
+  border: 1px solid var(--border-color);
+}
+
+.post-card:hover {
+  transform: translateY(-5px);
+}
+
+.food-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+.post-content {
+  padding: 1.5rem;
+}
+
+.post-content h3 {
+  margin-top: 0;
+  color: var(--secondary-color);
+}
+
+.post-date {
+  font-size: 0.9rem;
+  color: #888;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .posts-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Loading state and empty state styles */
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: var(--secondary-color);
+  font-style: italic;
+}
+
+.no-posts {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-color);
+  font-style: italic;
+  background-color: var(--card-color);
+  border-radius: 10px;
+  border: 1px dashed var(--border-color);
+}
+
+/* Animation for image loading */
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.food-image.loading {
+  animation: pulse 1.5s infinite;
+  background-color: var(--border-color);
+}
+
+/* Form feedback */
+.form-feedback {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border-radius: 5px;
+}
+
+.form-feedback.success {
+  background-color: rgba(76, 175, 80, 0.1);
+  color: #2e7d32;
+  border: 1px solid #2e7d32;
+}
+
+.form-feedback.error {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: #d32f2f;
+  border: 1px solid #d32f2f;
+}
+
+/* Search form styles */
+.search-container {
+  margin-bottom: 1.5rem;
+  background-color: var(--card-color);
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border-color);
+}
+
+.search-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.search-input {
+  flex: 1;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.search-button {
+  background-color: var(--secondary-color);
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s;
+}
+
+.search-button:hover {
+  background-color: #ff5252;
+}
+
+.reset-button {
+  background-color: #e0e0e0;
+  color: var(--text-color);
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s;
+}
+
+.reset-button:hover {
+  background-color: #cccccc;
+}
+
+@media (max-width: 600px) {
+  .search-form {
+    flex-direction: column;
+  }
+
+  .search-input,
+  .search-button,
+  .reset-button {
+    width: 100%;
+  }
+}
+
+/* No results style */
+.no-results {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-color);
+  font-style: italic;
+  background-color: var(--card-color);
+  border-radius: 10px;
+  border: 1px dashed var(--border-color);
+}
+
+/* Modal styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.7);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.modal.show {
+  display: block;
+  opacity: 1;
+}
+
+.modal-content {
+  background-color: white;
+  margin: 5% auto; /* Distance from top */
+  padding: 30px;
+  border-radius: 8px;
+  max-width: 700px;
+  width: 90%;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+  transform: translateY(-20px);
+  transition: transform 0.3s ease;
+  max-height: 90vh; /* Limit height to avoid screen overflow */
+  overflow-y: auto; /* Enable scrolling for long content */
+}
+
+.modal.show .modal-content {
+  transform: translateY(0);
+}
+
+/* Close button positioning */
+.close-modal {
+  position: absolute;
+  right: 20px;
+  top: 15px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #555;
+  cursor: pointer;
+  z-index: 2; /* Ensure it's displayed in front */
+}
+
+.close-modal:hover {
+  color: #000;
+}
+
+.modal-image {
+  width: 100%;
+  height: auto;
+  max-height: 60vh;
+  object-fit: contain;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #f9f9f9;
+}
+
+.modal-date {
+  color: #777;
+  margin-bottom: 16px;
+  font-style: italic;
+}
+
+#modalTitle {
+  margin-top: 10px;
+  word-break: break-word; /* Wrap long titles */
+}
+
+#modalDescription {
+  line-height: 1.6;
+  word-break: break-word; /* Wrap long descriptions */
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .modal-content {
+    margin: 10% auto;
+    padding: 20px;
+    width: 95%;
+  }
+
+  .modal-image {
+    max-height: 50vh;
+  }
+}
+
+/* Modal edit styles */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 15px;
+  /* Add right padding to avoid overlap with close button */
+  padding-right: 35px;
+}
+
+.edit-btn,
+.save-btn,
+.cancel-btn {
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+.edit-btn {
+  background-color: var(--accent-color);
+  color: var(--text-color);
+}
+
+.edit-btn:hover {
+  background-color: #ffc233;
+}
+
+.save-btn {
+  background-color: #4caf50;
+  color: white;
+}
+
+.save-btn:hover {
+  background-color: #3d8b40;
+}
+
+.cancel-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #d32f2f;
+}
+
+.edit-field {
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.edit-input,
+.edit-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.edit-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.editable.highlight {
+  background-color: rgba(255, 209, 102, 0.2);
+  padding: 5px;
+  border-radius: 3px;
+  transition: background-color 0.3s;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Styling for text content in modal */
+.modal-text-content {
+  margin-top: 15px;
+}
+
+/* Delete button styles */
+.delete-btn {
+  background-color: #f44336;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 5px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+.delete-btn:hover {
+  background-color: #d32f2f;
+}
+
+/* Delete confirmation modal styles */
+.delete-confirm-content {
+  max-width: 500px;
+}
+
+.delete-confirm-content h2 {
+  color: #d32f2f;
+  margin-bottom: 15px;
+}
+
+.delete-confirm-content p {
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+.delete-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* When a delete confirmation is shown, dim the background modal */
+.modal.background-dim {
+  opacity: 0.8;
+  pointer-events: none;
+}
